@@ -40,3 +40,22 @@ for item in data:
         VALUES (%s, %s, %s, %s)
         """
         session.execute(query_grade, (item['restaurant_id'], date, grade['grade'], grade['score']))
+
+    # Tables supplémentaires
+    query_groupby = """
+    INSERT INTO restaurants_by_borough (borough, restaurant_id) VALUES (%s, %s)
+    """
+    session.execute(query_groupby, (item['borough'], item['restaurant_id']))
+
+    if not item['grades']:
+        last_score = -1
+        last_grade = 'Never been graded'
+    else:
+        latest_grade = max(item['grades'], key=lambda x: x['date']['$date'])
+        last_score = latest_grade['score']
+        last_grade = latest_grade['grade']
+
+    query_resto_score = """
+    INSERT INTO restaurants_with_scores (restaurant_id, name, borough, cuisine, last_score, last_grade) VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    session.execute(query_resto_score, (item['restaurant_id'], item['name'], item['borough'], item['cuisine'], last_score, last_grade))
